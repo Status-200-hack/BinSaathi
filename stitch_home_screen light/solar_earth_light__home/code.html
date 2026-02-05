@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Solar Earth Light: Home</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9a406", // Warm Amber
+                        "background-light": "#FFFDF5", // Warm Light Cream (Adjusted per prompt)
+                        "background-dark": "#231c0f",
+                        "stone-gray": "#8E8E93",
+                        "stone-light": "#E5E5EA",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"] // Using Space Grotesk generally as requested for identity
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem", 
+                        "xl": "1.5rem", 
+                        "2xl": "2rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "amber-glow": "0 4px 20px -5px rgba(249, 164, 6, 0.4)",
+                        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: "Space Grotesk", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar hiding */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .map-pin-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#181611] overflow-hidden h-screen w-full relative flex flex-col">
+<!-- Map Background Layer -->
+<div class="absolute inset-0 z-0 bg-[#e8e6e1]">
+<!-- Map Image Simulation -->
+<img alt="Light cream colored map background with soft gray roads" class="w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="Light cream colored map background with soft gray roads" data-location="San Francisco" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFNAL1ytdXcGl036veEcJ4F6hBGyCsYOTg0TekLGb4PTrWL0VYpIW-6nKFTmVWxLkBLhHTUnfzN5veq95Y6Qh-LBD4HHGtY8eZLJKqaH2hUeuNSudL25fGlKDPMGexw-YAaQArTqO9wWG7q50K6-7exH-eG4MHsexjeaE4vsAi6s9sqqrlcp2E-zp3b3rnxYvlg7RaI4ctjHLnNmsWYOBNIGw5s_e11NcNwNp6rLtCDK6Nu9PZVHcidomHrAEWTcxRwfa55oewYBo"/>
+<!-- Interactive Pins -->
+<!-- Pin 1: TSEC Smart Bin (Selected) -->
+<div class="absolute top-[45%] left-[55%] flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 group">
+<div class="relative flex items-center justify-center size-14">
+<div class="absolute inset-0 bg-primary rounded-full opacity-30 map-pin-pulse"></div>
+<div class="absolute inset-2 bg-primary rounded-full opacity-40 animate-pulse"></div>
+<div class="relative z-10 bg-primary text-white p-2.5 rounded-full shadow-amber-glow transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[24px]">recycling</span>
+</div>
+</div>
+<!-- Tooltip/Label -->
+<div class="mt-1 px-3 py-1 bg-white rounded-full shadow-md text-xs font-bold text-gray-800 whitespace-nowrap">
+                80% Full
+            </div>
+</div>
+<!-- Pin 2: Secondary Bin -->
+<div class="absolute top-[30%] left-[20%] flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 cursor-pointer opacity-80 hover:opacity-100 transition-opacity z-0">
+<div class="relative bg-white text-primary p-2 rounded-full shadow-md border-2 border-primary/20 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">recycling</span>
+</div>
+</div>
+<!-- Pin 3: Secondary Bin -->
+<div class="absolute top-[60%] right-[15%] flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 cursor-pointer opacity-80 hover:opacity-100 transition-opacity z-0">
+<div class="relative bg-white text-primary p-2 rounded-full shadow-md border-2 border-primary/20 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">recycling</span>
+</div>
+</div>
+<!-- User Location Pulse -->
+<div class="absolute bottom-[40%] left-[30%] size-8 flex items-center justify-center">
+<div class="absolute w-full h-full bg-blue-500 rounded-full opacity-20 animate-ping"></div>
+<div class="w-4 h-4 bg-blue-500 border-[3px] border-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<!-- Top Floating Header -->
+<div class="relative z-20 w-full px-4 pt-12 pb-4 flex flex-col gap-3 pointer-events-none">
+<!-- Search Bar -->
+<div class="pointer-events-auto flex items-center gap-3 w-full">
+<div class="flex-1 glass-panel h-12 rounded-xl flex items-center px-4 shadow-soft border border-white/40">
+<span class="material-symbols-outlined text-stone-gray mr-3">search</span>
+<input class="bg-transparent border-none outline-none text-gray-800 placeholder-stone-gray flex-1 w-full focus:ring-0 p-0 text-base" placeholder="Find a recycling point..." type="text"/>
+<button class="p-1 rounded-full hover:bg-black/5 text-stone-gray">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<button class="size-12 rounded-xl glass-panel shadow-soft border border-white/40 flex items-center justify-center text-gray-800">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+<!-- Filter Chips (Horizontal Scroll) -->
+<div class="pointer-events-auto flex gap-2 overflow-x-auto scrollbar-hide pb-2 pl-1">
+<button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-amber-glow flex items-center gap-1.5 whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">battery_charging_full</span>
+                Batteries
+            </button>
+<button class="bg-white/90 backdrop-blur text-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm border border-white/50 flex items-center gap-1.5 whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">smartphone</span>
+                Phones
+            </button>
+<button class="bg-white/90 backdrop-blur text-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm border border-white/50 flex items-center gap-1.5 whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">laptop_mac</span>
+                Laptops
+            </button>
+</div>
+</div>
+<!-- Right Side Map Controls -->
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-20">
+<div class="flex flex-col bg-white/90 backdrop-blur rounded-xl shadow-soft overflow-hidden border border-white/50">
+<button class="size-10 flex items-center justify-center text-gray-800 hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="size-10 flex items-center justify-center text-gray-800 hover:bg-gray-50 active:bg-gray-100">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+<button class="size-10 flex items-center justify-center bg-white/90 backdrop-blur rounded-xl shadow-soft text-gray-800 hover:bg-gray-50 border border-white/50">
+<span class="material-symbols-outlined">my_location</span>
+</button>
+</div>
+<!-- Bottom Sheet Content Area -->
+<!-- This sits above the map but leaves space for the nav bar -->
+<div class="absolute bottom-[72px] inset-x-0 z-30 flex flex-col justify-end px-0">
+<div class="w-full bg-white rounded-t-[24px] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] pb-4 animate-slide-up">
+<!-- Drag Handle -->
+<div class="w-full flex justify-center pt-3 pb-2">
+<div class="w-12 h-1.5 bg-gray-200 rounded-full"></div>
+</div>
+<!-- Header -->
+<div class="px-5 pb-3">
+<h2 class="text-[#181611] text-lg font-bold tracking-tight">Nearest Smart Bin</h2>
+</div>
+<!-- Main Card -->
+<div class="px-5">
+<div class="bg-background-light border border-stone-light/50 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
+<!-- Image/Thumbnail -->
+<div class="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative">
+<img alt="Close up of a smart recycling bin" class="w-full h-full object-cover" data-alt="Smart E-waste recycling bin device" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2SWgjxM6hGsBu3Qos-x083A_psW1n1RF-gCPr84T4dF0ztp2ssFqsErTrkm2wXSo-KIyCMAYfLt4EQOmefAAzXrrRirI3RQJaERsvg65LOY0mG2poAkX2JWXOe87ahOJMRsT7MjGjoyUxHMoVwvgIzp3BNUIqLAVXY_-bpBb8FZWe-vqIL4DY6RycFxwIydU4odQCZ6YHNFfZIOqeNOQLSX-zN7zchp4JDKSnhhPvISrQLuUJjDjAka1BpHi1Wwpu95EG01MCDlo"/>
+<div class="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[10px] font-medium text-center py-0.5 backdrop-blur-sm">
+                            250m
+                        </div>
+</div>
+<!-- Details -->
+<div class="flex-1 flex flex-col justify-between h-full min-h-[80px]">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-gray-900 text-lg leading-tight">TSEC Smart Bin</h3>
+<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wide">Open</span>
+</div>
+<p class="text-stone-gray text-sm mt-1 line-clamp-1">Opposite City Library, Main St.</p>
+</div>
+<div class="flex items-center gap-3 mt-2">
+<div class="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white px-2 py-1 rounded-lg border border-stone-light">
+<span class="size-2 rounded-full bg-yellow-500"></span>
+                                80% Full
+                            </div>
+<div class="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white px-2 py-1 rounded-lg border border-stone-light">
+<span class="material-symbols-outlined text-[14px]">eco</span>
+                                +50 Pts
+                            </div>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<button class="mt-4 w-full bg-primary hover:bg-amber-500 text-white font-bold text-lg h-14 rounded-xl shadow-amber-glow flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined">navigation</span>
+                    Navigate
+                </button>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 w-full h-[72px] bg-white border-t border-gray-100 z-40 flex items-center justify-around pb-2">
+<button class="flex flex-col items-center justify-center gap-1 w-16 h-full text-primary">
+<span class="material-symbols-outlined fill-current">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 w-16 h-full text-stone-gray hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] font-medium">Impact</span>
+</button>
+<!-- Center Floating Action Button (Optional style for scanning) -->
+<div class="relative -top-5">
+<button class="size-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center transform transition-transform active:scale-95 border-4 border-white">
+<span class="material-symbols-outlined text-[28px]">qr_code_scanner</span>
+</button>
+</div>
+<button class="flex flex-col items-center justify-center gap-1 w-16 h-full text-stone-gray hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined">stars</span>
+<span class="text-[10px] font-medium">Rewards</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 w-16 h-full text-stone-gray hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</div>
+</body></html>
