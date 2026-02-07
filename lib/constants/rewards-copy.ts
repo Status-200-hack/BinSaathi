@@ -76,19 +76,19 @@ export const ACHIEVEMENT_MESSAGES = {
   
   // Streak achievements
   streaks: {
-    3_days: {
+    'three_days': {
       title: "Getting Into the Habit! 🔥",
       message: "3 days in a row! You're building an amazing eco-friendly routine!",
       encouragement: "Consistency is key to making a big impact!"
     },
     
-    7_days: {
+    'seven_days': {
       title: "Week Warrior! 🏆",
       message: "A whole week of recycling! You're showing incredible dedication to our planet!",
       encouragement: "You're inspiring others with your commitment!"
     },
     
-    30_days: {
+    'thirty_days': {
       title: "Eco Legend! 👑",
       message: "30 days straight! You've made recycling a true lifestyle. You're a role model for everyone!",
       encouragement: "You're changing the world, one day at a time!"

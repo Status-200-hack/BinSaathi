@@ -13,6 +13,7 @@ interface Bin {
   fillLevel: number
   address: string
   acceptedItems: string[]
+  distance?: number
 }
 
 interface LeafletMapProps {
@@ -20,13 +21,49 @@ interface LeafletMapProps {
   userLocation: { lat: number; lng: number } | null
   onBinSelect?: (bin: Bin) => void
   selectedBinId?: string
+  onDistanceUpdate?: (bins: Bin[]) => void
 }
 
-export default function LeafletMap({ bins, userLocation, onBinSelect, selectedBinId }: LeafletMapProps) {
+export default function LeafletMap({ bins, userLocation, onBinSelect, selectedBinId, onDistanceUpdate }: LeafletMapProps) {
   const mapRef = useRef<L.Map | null>(null)
   const markersRef = useRef<{ [key: string]: L.Marker }>({})
   const userMarkerRef = useRef<L.Marker | null>(null)
   const [mapReady, setMapReady] = useState(false)
+
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371e3 // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180
+    const φ2 = lat2 * Math.PI / 180
+    const Δφ = (lat2 - lat1) * Math.PI / 180
+    const Δλ = (lng2 - lng1) * Math.PI / 180
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+    return Math.round(R * c) // Distance in meters
+  }
+
+  // Open navigation to bin
+  const navigateToBin = (bin: Bin) => {
+    // Try Google Maps first (works on both mobile and desktop)
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${bin.lat},${bin.lng}&travelmode=walking`
+    
+    // For iOS devices, try Apple Maps
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    if (isIOS) {
+      const appleMapsUrl = `maps://maps.apple.com/?daddr=${bin.lat},${bin.lng}&dirflg=w`
+      window.location.href = appleMapsUrl
+      // Fallback to Google Maps if Apple Maps doesn't open
+      setTimeout(() => {
+        window.open(googleMapsUrl, '_blank')
+      }, 500)
+    } else {
+      window.open(googleMapsUrl, '_blank')
+    }
+  }
 
   useEffect(() => {
     // Initialize map
@@ -128,8 +165,20 @@ export default function LeafletMap({ bins, userLocation, onBinSelect, selectedBi
     Object.values(markersRef.current).forEach(marker => marker.remove())
     markersRef.current = {}
 
+    // Calculate distances and update bins
+    let binsWithDistance = bins
+    if (userLocation) {
+      binsWithDistance = bins.map(bin => ({
+        ...bin,
+        distance: calculateDistance(userLocation.lat, userLocation.lng, bin.lat, bin.lng)
+      }))
+      
+      // Sort by distance (nearest first)
+      binsWithDistance.sort((a, b) => (a.distance || 0) - (b.distance || 0))
+    }
+
     // Add bin markers
-    bins.forEach(bin => {
+    binsWithDistance.forEach(bin => {
       const getStatusColor = (status: string) => {
         switch (status) {
           case 'active': return '#22c55e'
@@ -188,17 +237,12 @@ export default function LeafletMap({ bins, userLocation, onBinSelect, selectedBi
         zIndexOffset: isSelected ? 500 : 0
       }).addTo(mapRef.current!)
 
-      // Calculate distance from user
+      // Format distance text
       let distanceText = ''
-      if (userLocation) {
-        const distance = mapRef.current!.distance(
-          [userLocation.lat, userLocation.lng],
-          [bin.lat, bin.lng]
-        )
-        const distanceKm = (distance / 1000).toFixed(1)
-        const distanceM = Math.round(distance)
-        distanceText = distance < 1000 
-          ? `${distanceM}m away` 
+      if (bin.distance !== undefined) {
+        const distanceKm = (bin.distance / 1000).toFixed(1)
+        distanceText = bin.distance < 1000 
+          ? `${bin.distance}m away` 
           : `${distanceKm}km away`
       }
 
@@ -243,22 +287,45 @@ export default function LeafletMap({ bins, userLocation, onBinSelect, selectedBi
               ${bin.acceptedItems.join(', ')}
             </div>
           </div>
-          <button 
-            onclick="window.selectBin('${bin.id}')"
-            style="
-              width: 100%;
-              background: #f9a406;
-              color: white;
-              border: none;
-              padding: 8px;
-              border-radius: 8px;
-              font-weight: 600;
-              cursor: pointer;
-              font-size: 13px;
-            "
-          >
-            View Details
-          </button>
+          <div style="display: flex; gap: 8px;">
+            <button 
+              onclick="window.selectBin('${bin.id}')"
+              style="
+                flex: 1;
+                background: #f9a406;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 13px;
+              "
+            >
+              View Details
+            </button>
+            <button 
+              onclick="window.navigateToBin('${bin.id}')"
+              style="
+                flex: 1;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+              "
+            >
+              <span style="font-size: 16px;">🧭</span>
+              Navigate
+            </button>
+          </div>
         </div>
       `, {
         maxWidth: 300,
@@ -274,14 +341,26 @@ export default function LeafletMap({ bins, userLocation, onBinSelect, selectedBi
       markersRef.current[bin.id] = marker
     })
 
-    // Add global function for popup button
+    // Add global functions for popup buttons
     if (typeof window !== 'undefined') {
       (window as any).selectBin = (binId: string) => {
-        const bin = bins.find(b => b.id === binId)
+        const bin = binsWithDistance.find(b => b.id === binId)
         if (bin && onBinSelect) {
           onBinSelect(bin)
         }
       }
+      
+      (window as any).navigateToBin = (binId: string) => {
+        const bin = binsWithDistance.find(b => b.id === binId)
+        if (bin) {
+          navigateToBin(bin)
+        }
+      }
+    }
+
+    // Notify parent component of distance updates (only once after markers are set)
+    if (userLocation && onDistanceUpdate && binsWithDistance.length > 0) {
+      onDistanceUpdate(binsWithDistance)
     }
   }, [bins, selectedBinId, onBinSelect, userLocation])
 

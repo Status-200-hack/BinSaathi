@@ -1,16 +1,10 @@
 import { BottomNav } from '@/components/layout/bottom-nav'
+import { Rewards } from '@/components/pages/rewards'
 
 export default function RewardsPage() {
   return (
     <div className="relative min-h-screen">
-      <div className="min-h-screen bg-background-light dark:bg-background-dark p-6 pt-16">
-        <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
-          Rewards
-        </h1>
-        <p className="text-stone-500 dark:text-stone-400 mt-2">
-          Coming soon...
-        </p>
-      </div>
+      <Rewards />
       <BottomNav />
     </div>
   )

@@ -60,8 +60,7 @@ export function SuccessScreen() {
   }
 
   const handleViewReceipt = () => {
-    // TODO: Implement receipt view
-    console.log('View receipt for:', result)
+    router.push('/receipt')
   }
 
   if (!result) {

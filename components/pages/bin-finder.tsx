@@ -1,29 +1,61 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { InteractiveMap, type Bin } from '@/components/map/interactive-map'
 
 const filterChips = [
-  { id: 'all', label: 'All Items', icon: 'recycling', active: true },
-  { id: 'batteries', label: 'Batteries', icon: 'battery_charging_full', active: false },
-  { id: 'phones', label: 'Phones', icon: 'smartphone', active: false },
-  { id: 'laptops', label: 'Laptops', icon: 'laptop_mac', active: false },
-  { id: 'cables', label: 'Cables', icon: 'cable', active: false },
+  { id: 'all', label: 'All Items', icon: 'recycling' },
+  { id: 'batteries', label: 'Batteries', icon: 'battery_charging_full' },
+  { id: 'phones', label: 'Phones', icon: 'smartphone' },
+  { id: 'laptops', label: 'Laptops', icon: 'laptop_mac' },
+  { id: 'cables', label: 'Cables', icon: 'cable' },
 ]
-
-// Mock bin data - will be replaced by bins near user's actual location
-const mockBins: Bin[] = []
 
 export function BinFinder() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [selectedBin, setSelectedBin] = useState<Bin | null>(null)
+  const [sortedBins, setSortedBins] = useState<Bin[]>([])
 
-  const handleBinSelect = (bin: Bin) => {
+  const handleBinSelect = useCallback((bin: Bin) => {
     setSelectedBin(bin)
+  }, [])
+
+  const handleDistanceUpdate = useCallback((binsWithDistance: Bin[]) => {
+    setSortedBins(binsWithDistance)
+  }, [])
+
+  const navigateToBin = (bin: Bin) => {
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${bin.lat},${bin.lng}&travelmode=walking`
+    
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    if (isIOS) {
+      const appleMapsUrl = `maps://maps.apple.com/?daddr=${bin.lat},${bin.lng}&dirflg=w`
+      window.location.href = appleMapsUrl
+      setTimeout(() => {
+        window.open(googleMapsUrl, '_blank')
+      }, 500)
+    } else {
+      window.open(googleMapsUrl, '_blank')
+    }
   }
+
+  const formatDistance = (distance?: number) => {
+    if (!distance) return ''
+    if (distance < 1000) {
+      return `${distance}m`
+    }
+    return `${(distance / 1000).toFixed(1)}km`
+  }
+
+  const filteredBins = sortedBins.filter(bin => {
+    if (activeFilter === 'all') return true
+    return bin.acceptedItems.some(item => 
+      item.toLowerCase().includes(activeFilter.toLowerCase())
+    )
+  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -45,21 +77,136 @@ export function BinFinder() {
     }
   }
 
+  // Show bin details modal
+  if (selectedBin) {
+    return (
+      <div className="min-h-screen bg-background-light dark:bg-background-dark">
+        {/* Header */}
+        <div className="sticky top-0 z-30 bg-surface-light dark:bg-surface-dark border-b border-stone-200 dark:border-stone-700">
+          <div className="px-4 py-4 flex items-center gap-3">
+            <button
+              onClick={() => setSelectedBin(null)}
+              className="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+            >
+              <span className="material-symbols-outlined text-stone-600 dark:text-stone-400">
+                arrow_back
+              </span>
+            </button>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                Bin Details
+              </h1>
+              {selectedBin.distance && (
+                <p className="text-sm text-primary font-semibold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-base">near_me</span>
+                  {formatDistance(selectedBin.distance)} away
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-4">
+          {/* Bin Image/Map Preview */}
+          <Card className="overflow-hidden">
+            <div className="relative h-48 bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
+              <img 
+                src="/bin-image.png" 
+                alt={selectedBin.name}
+                className="w-full h-full object-cover"
+              />
+              {selectedBin.distance && (
+                <div className="absolute bottom-4 left-4 bg-primary/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-bold text-sm">
+                  {formatDistance(selectedBin.distance)}
+                </div>
+              )}
+              <div className={cn(
+                'absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold border',
+                getStatusColor(selectedBin.status)
+              )}>
+                {getStatusText(selectedBin.status)}
+              </div>
+            </div>
+          </Card>
+
+          {/* Bin Info */}
+          <Card className="p-4">
+            <h2 className="text-xl font-bold text-text-light dark:text-text-dark mb-2">
+              {selectedBin.name}
+            </h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-start gap-2 text-stone-600 dark:text-stone-400">
+                <span className="material-symbols-outlined text-lg">location_on</span>
+                <span>{selectedBin.address}</span>
+              </div>
+              <div className="flex items-center gap-4 pt-2">
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    'w-3 h-3 rounded-full',
+                    selectedBin.fillLevel > 75 ? 'bg-red-500' :
+                    selectedBin.fillLevel > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                  )} />
+                  <span className="text-stone-600 dark:text-stone-400">
+                    {selectedBin.fillLevel}% Full
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-primary font-semibold">
+                  <span className="material-symbols-outlined text-lg">eco</span>
+                  <span>+50 Points</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Accepted Items */}
+          <Card className="p-4">
+            <h3 className="text-sm font-bold text-text-light dark:text-text-dark mb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">check_circle</span>
+              Accepted Items
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedBin.acceptedItems.map((item) => (
+                <span 
+                  key={item}
+                  className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </Card>
+
+          {/* Navigate Button */}
+          <Button 
+            className="w-full" 
+            size="xl"
+            onClick={() => navigateToBin(selectedBin)}
+          >
+            <span className="material-symbols-outlined mr-2">navigation</span>
+            Get Directions
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Main map view with bottom sheet
   return (
     <div className="relative h-screen w-full overflow-hidden bg-stone-100 dark:bg-background-dark">
       {/* Map Container */}
       <div className="absolute inset-0 z-0">
         <InteractiveMap 
-          bins={mockBins}
+          bins={sortedBins}
           onBinSelect={handleBinSelect}
-          selectedBinId={selectedBin?.id}
+          selectedBinId={(selectedBin as Bin | null)?.id}
+          onDistanceUpdate={handleDistanceUpdate}
         />
       </div>
 
-      {/* Top Header */}
-      <div className="relative z-20 w-full px-4 pt-12 pb-4 flex flex-col gap-3">
-        {/* Search Bar */}
-        <div className="flex items-center gap-3 w-full">
+      {/* Top Search Bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-4 pt-12 pb-4">
+        <div className="flex items-center gap-3">
           <div className="flex-1 bg-white/95 dark:bg-stone-800/95 backdrop-blur-md border border-white/40 dark:border-white/10 h-12 rounded-xl flex items-center px-4 shadow-lg">
             <span className="material-symbols-outlined text-stone-500 mr-3">search</span>
             <input
@@ -71,22 +218,22 @@ export function BinFinder() {
               <span className="material-symbols-outlined">tune</span>
             </button>
           </div>
-          <Button variant="glass" size="md" className="h-12 w-12 p-0 bg-white/95 dark:bg-stone-800/95">
-            <span className="material-symbols-outlined">account_circle</span>
-          </Button>
+          <button className="h-12 w-12 rounded-full bg-white/95 dark:bg-stone-800/95 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-lg flex items-center justify-center hover:bg-white dark:hover:bg-stone-700 transition-colors">
+            <span className="material-symbols-outlined text-stone-600 dark:text-stone-400">account_circle</span>
+          </button>
         </div>
 
         {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 pl-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 pb-2">
           {filterChips.map((chip) => (
             <button
               key={chip.id}
               onClick={() => setActiveFilter(chip.id)}
               className={cn(
-                'px-4 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 whitespace-nowrap transition-all',
+                'px-4 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 whitespace-nowrap transition-all shadow-md',
                 chip.id === activeFilter
-                  ? 'bg-primary text-white shadow-lg'
-                  : 'bg-white/95 dark:bg-stone-800/95 backdrop-blur-md border border-white/40 dark:border-white/10 text-text-light dark:text-text-dark hover:bg-stone-100 dark:hover:bg-stone-800'
+                  ? 'bg-primary text-white'
+                  : 'bg-white/95 dark:bg-stone-800/95 backdrop-blur-md border border-white/40 dark:border-white/10 text-text-light dark:text-text-dark hover:bg-white dark:hover:bg-stone-800'
               )}
             >
               <span className="material-symbols-outlined text-lg">
@@ -98,101 +245,120 @@ export function BinFinder() {
         </div>
       </div>
 
-      {/* Bottom Sheet */}
-      {selectedBin && (
-        <div className="absolute bottom-[72px] inset-x-0 z-30">
-          <Card className="bg-surface-light dark:bg-surface-dark rounded-t-3xl shadow-2xl pb-4">
-            {/* Drag Handle */}
-            <div className="w-full flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full" />
-            </div>
+      {/* Bottom Sheet with Bins List */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 max-h-[45vh]">
+        <div className="bg-surface-light dark:bg-surface-dark rounded-t-3xl shadow-2xl">
+          {/* Drag Handle */}
+          <div className="w-full flex justify-center pt-3 pb-2">
+            <div className="w-12 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-full" />
+          </div>
 
-            {/* Header */}
-            <div className="px-5 pb-3">
-              <h2 className="text-lg font-bold text-text-light dark:text-text-dark tracking-tight">
-                {selectedBin.distance ? `${selectedBin.distance}m away` : 'Selected Bin'}
-              </h2>
-            </div>
+          {/* Header */}
+          <div className="px-5 pb-3">
+            <h2 className="text-lg font-bold text-text-light dark:text-text-dark">
+              Nearest Smart Bins
+            </h2>
+            <p className="text-sm text-stone-500 dark:text-stone-400">
+              {filteredBins.length} bins found near you
+            </p>
+          </div>
 
-            {/* Main Card */}
-            <div className="px-5">
-              <div className="bg-background-light dark:bg-background-dark border border-stone-200 dark:border-stone-700 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
-                {/* Image */}
-                <div className="w-20 h-20 rounded-xl bg-stone-100 dark:bg-stone-800 overflow-hidden flex-shrink-0 relative">
-                  <div className="w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 dark:from-stone-700 dark:to-stone-800 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-stone-500 dark:text-stone-400 text-2xl">
-                      recycling
-                    </span>
-                  </div>
-                  {selectedBin.distance && (
-                    <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs font-medium text-center py-0.5 backdrop-blur-sm">
-                      {selectedBin.distance}m
-                    </div>
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="flex-1 flex flex-col justify-between h-full min-h-[80px]">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-bold text-text-light dark:text-text-dark text-lg leading-tight">
-                        {selectedBin.name}
-                      </h3>
-                      <span className={cn(
-                        'text-xs font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide',
-                        getStatusColor(selectedBin.status)
-                      )}>
-                        {getStatusText(selectedBin.status)}
-                      </span>
-                    </div>
-                    <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">
-                      {selectedBin.address}
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 mt-2">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600 dark:text-stone-400 bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-lg border border-stone-200 dark:border-stone-700">
-                      <span className={cn(
-                        'w-2 h-2 rounded-full',
-                        selectedBin.fillLevel > 75 ? 'bg-red-500' :
-                        selectedBin.fillLevel > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                      )} />
-                      {selectedBin.fillLevel}% Full
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600 dark:text-stone-400 bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-lg border border-stone-200 dark:border-stone-700">
-                      <span className="material-symbols-outlined text-sm">eco</span>
-                      +50 Pts
-                    </div>
-                  </div>
-                </div>
+          {/* Bins List - Scrollable */}
+          <div className="overflow-y-auto max-h-[calc(45vh-100px)] px-5 pb-24">
+            {filteredBins.length === 0 ? (
+              <div className="py-8 text-center">
+                <span className="material-symbols-outlined text-4xl text-stone-300 dark:text-stone-700 mb-2">
+                  location_off
+                </span>
+                <p className="text-sm text-stone-500 dark:text-stone-400">
+                  No bins found. Try adjusting your filters.
+                </p>
               </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredBins.map((bin, index) => (
+                  <Card 
+                    key={bin.id}
+                    className={cn(
+                      "p-4 cursor-pointer transition-all hover:shadow-lg",
+                      index === 0 && "border-2 border-primary"
+                    )}
+                    onClick={() => handleBinSelect(bin)}
+                  >
+                    <div className="flex gap-3">
+                      {/* Bin Image */}
+                      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 relative bg-gradient-to-br from-teal-500 to-teal-600">
+                        <img 
+                          src="/bin-image.png" 
+                          alt={bin.name}
+                          className="w-full h-full object-cover"
+                        />
+                        {bin.distance && (
+                          <div className="absolute -bottom-1 -right-1 bg-primary text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-md">
+                            {formatDistance(bin.distance)}
+                          </div>
+                        )}
+                      </div>
 
-              {/* Accepted Items */}
-              <div className="mt-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl">
-                <div className="text-xs font-semibold text-stone-600 dark:text-stone-400 mb-2">
-                  Accepts:
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedBin.acceptedItems.map((item) => (
-                    <span 
-                      key={item}
-                      className="text-xs px-2 py-1 bg-white dark:bg-stone-700 text-stone-700 dark:text-stone-300 rounded-md border border-stone-200 dark:border-stone-600"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                      {/* Bin Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className="font-bold text-text-light dark:text-text-dark text-base leading-tight">
+                            {bin.name}
+                          </h3>
+                          <span className={cn(
+                            'text-xs font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide flex-shrink-0',
+                            getStatusColor(bin.status)
+                          )}>
+                            {getStatusText(bin.status)}
+                          </span>
+                        </div>
+                        
+                        <p className="text-xs text-stone-500 dark:text-stone-400 mb-2 line-clamp-1">
+                          {bin.address}
+                        </p>
+
+                        {/* Stats Row */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1 text-xs">
+                            <div className={cn(
+                              'w-2 h-2 rounded-full',
+                              bin.fillLevel > 75 ? 'bg-red-500' :
+                              bin.fillLevel > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                            )} />
+                            <span className="text-stone-600 dark:text-stone-400 font-medium">
+                              {bin.fillLevel}% Full
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-primary font-semibold">
+                            <span className="material-symbols-outlined text-sm">eco</span>
+                            <span>+50 Pts</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Navigate Button - Only for first bin */}
+                    {index === 0 && (
+                      <Button 
+                        className="w-full mt-3" 
+                        size="lg"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigateToBin(bin)
+                        }}
+                      >
+                        <span className="material-symbols-outlined mr-2">navigation</span>
+                        Navigate
+                      </Button>
+                    )}
+                  </Card>
+                ))}
               </div>
-
-              {/* Action Button */}
-              <Button className="mt-4 w-full" size="xl">
-                <span className="material-symbols-outlined">navigation</span>
-                Navigate
-              </Button>
-            </div>
-          </Card>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

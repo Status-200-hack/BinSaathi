@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DetectionService, DetectionInput, DetectionResult } from '@/lib/services/detection-service'
+import { CameraCapture } from '@/components/scanner/camera-capture'
 import { cn } from '@/lib/utils'
 
 interface DetectionFlowProps {
@@ -63,6 +64,7 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
   const [scanningPhase, setScanningPhase] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [showCamera, setShowCamera] = useState(false)
 
   const detectionService = DetectionService.getInstance()
 
@@ -78,6 +80,18 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
       }
       reader.readAsDataURL(file)
     }
+  }, [])
+
+  const handleCameraCapture = useCallback((imageData: string) => {
+    // Convert base64 to File object
+    fetch(imageData)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' })
+        setInput(prev => ({ ...prev, image: file }))
+        setImagePreview(imageData)
+        setShowCamera(false)
+      })
   }, [])
 
   const handleWeightChange = useCallback((value: number) => {
@@ -156,6 +170,14 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
   if (currentStep === 'input') {
     return (
       <div className="space-y-6">
+        {/* Camera Capture Modal */}
+        {showCamera && (
+          <CameraCapture
+            onCapture={handleCameraCapture}
+            onClose={() => setShowCamera(false)}
+          />
+        )}
+
         {/* Image Upload */}
         <Card className="p-6">
           <h3 className="text-lg font-bold text-text-light dark:text-text-dark mb-4">
@@ -163,35 +185,59 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
           </h3>
           
           <div className="space-y-4">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-            />
-            
-            <label
-              htmlFor="image-upload"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-stone-300 dark:border-stone-600 rounded-xl cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
-            >
-              {imagePreview ? (
+            {imagePreview ? (
+              <div className="relative w-full h-48 rounded-xl overflow-hidden">
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-full object-cover rounded-xl"
+                  className="w-full h-full object-cover"
                 />
-              ) : (
-                <div className="text-center">
+                <button
+                  onClick={() => {
+                    setImagePreview(null)
+                    setInput(prev => ({ ...prev, image: undefined }))
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 shadow-lg hover:bg-red-600 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {/* Camera Button */}
+                <button
+                  onClick={() => setShowCamera(true)}
+                  className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-primary/50 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-4xl text-primary mb-2">
+                    photo_camera
+                  </span>
+                  <p className="text-sm font-medium text-primary">
+                    Take Photo
+                  </p>
+                </button>
+
+                {/* Upload Button */}
+                <label
+                  htmlFor="image-upload"
+                  className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-stone-300 dark:border-stone-600 rounded-xl cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                >
                   <span className="material-symbols-outlined text-4xl text-stone-400 mb-2">
-                    add_a_photo
+                    upload_file
                   </span>
                   <p className="text-sm text-stone-500 dark:text-stone-400">
-                    Tap to add photo for better accuracy
+                    Upload Photo
                   </p>
-                </div>
-              )}
-            </label>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+              </div>
+            )}
           </div>
         </Card>
 
@@ -449,9 +495,224 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
     )
   }
 
-  // Add other steps (alternatives, confirmation) here...
+  // Alternatives step (medium confidence)
+  if (currentStep === 'alternatives' && result) {
+    return (
+      <div className="space-y-6">
+        {/* Main Result */}
+        <Card className="p-6 border-2 border-primary">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">verified</span>
+            <h3 className="text-lg font-bold text-text-light dark:text-text-dark">
+              Best Match
+            </h3>
+          </div>
+          
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary text-xl">
+                {result.itemType === 'smartphone' ? 'smartphone' :
+                 result.itemType === 'laptop' ? 'laptop_mac' :
+                 result.itemType === 'tablet' ? 'tablet_mac' :
+                 result.itemType === 'battery' ? 'battery_charging_full' :
+                 result.itemType === 'cable' ? 'cable' :
+                 'devices'}
+              </span>
+            </div>
+            
+            <div className="flex-1">
+              <h4 className="font-bold text-text-light dark:text-text-dark">
+                {result.itemName}
+              </h4>
+              <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
+                {result.confidence}% confidence
+              </p>
+            </div>
+            
+            <Button size="sm" onClick={() => setCurrentStep('result')}>
+              Select
+            </Button>
+          </div>
+        </Card>
+
+        {/* Alternative Options */}
+        {alternatives.length > 0 && (
+          <>
+            <div className="text-center">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
+                Or choose from these alternatives:
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {alternatives.map((alt, index) => (
+                <Card key={index} className="p-4 hover:border-primary/50 transition-colors cursor-pointer" onClick={() => selectAlternative(alt)}>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-stone-100 dark:bg-stone-800 rounded-xl flex items-center justify-center">
+                      <span className="material-symbols-outlined text-stone-600 dark:text-stone-400 text-xl">
+                        {alt.itemType === 'smartphone' ? 'smartphone' :
+                         alt.itemType === 'laptop' ? 'laptop_mac' :
+                         alt.itemType === 'tablet' ? 'tablet_mac' :
+                         alt.itemType === 'battery' ? 'battery_charging_full' :
+                         alt.itemType === 'cable' ? 'cable' :
+                         'devices'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h4 className="font-bold text-text-light dark:text-text-dark">
+                        {alt.itemName}
+                      </h4>
+                      <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
+                        {alt.confidence}% confidence
+                      </p>
+                    </div>
+                    
+                    <span className="material-symbols-outlined text-stone-400">
+                      chevron_right
+                    </span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={() => setCurrentStep('input')} className="flex-1">
+            Start Over
+          </Button>
+          <Button onClick={() => setCurrentStep('result')} className="flex-1">
+            Continue with Best Match
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Confirmation step (low confidence)
+  if (currentStep === 'confirmation' && result) {
+    return (
+      <div className="space-y-6">
+        {/* Low Confidence Warning */}
+        <Card className="p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">
+              help
+            </span>
+            <div>
+              <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-200 mb-2">
+                I Need Your Help! 🤔
+              </h3>
+              <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                I'm not quite sure what this is. Your expertise will help me learn and improve!
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Best Guess */}
+        <Card className="p-6">
+          <h3 className="text-sm font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-4">
+            My Best Guess
+          </h3>
+          
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-stone-600 dark:text-stone-400 text-2xl">
+                {result.itemType === 'smartphone' ? 'smartphone' :
+                 result.itemType === 'laptop' ? 'laptop_mac' :
+                 result.itemType === 'tablet' ? 'tablet_mac' :
+                 result.itemType === 'battery' ? 'battery_charging_full' :
+                 result.itemType === 'cable' ? 'cable' :
+                 'devices'}
+              </span>
+            </div>
+            
+            <div className="flex-1">
+              <h4 className="text-xl font-bold text-text-light dark:text-text-dark mb-1">
+                {result.itemName}
+              </h4>
+              <p className="text-sm text-stone-500 dark:text-stone-400">
+                Only {result.confidence}% confident
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
+            {result.explanation}
+          </p>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => confirmResult(true)}
+              className="w-full"
+            >
+              <span className="material-symbols-outlined mr-2">check</span>
+              This is Correct
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentStep('input')}
+              className="w-full"
+            >
+              <span className="material-symbols-outlined mr-2">close</span>
+              Try Again
+            </Button>
+          </div>
+        </Card>
+
+        {/* Manual Entry Option */}
+        <Card className="p-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">
+              edit
+            </span>
+            <h4 className="font-bold text-blue-900 dark:text-blue-200">
+              Help Me Learn
+            </h4>
+          </div>
+          <p className="text-sm text-blue-800 dark:text-blue-300 mb-4">
+            Tell me what this actually is, and I'll remember for next time!
+          </p>
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              // For now, just proceed with the result
+              // In a full implementation, you'd show a manual entry form
+              confirmResult(true)
+            }}
+            className="w-full"
+          >
+            Teach Me the Correct Answer
+          </Button>
+        </Card>
+      </div>
+    )
+  }
   
-  return null
+  // Fallback for any unhandled state
+  return (
+    <div className="flex flex-col items-center justify-center py-12 space-y-6">
+      <div className="text-center">
+        <span className="material-symbols-outlined text-stone-400 text-6xl mb-4 block">
+          error_outline
+        </span>
+        <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-2">
+          Something went wrong
+        </h3>
+        <p className="text-stone-500 dark:text-stone-400 mb-6">
+          We encountered an unexpected state. Let's start over.
+        </p>
+        <Button onClick={() => setCurrentStep('input')}>
+          Start Over
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 // CSS for custom slider styling
