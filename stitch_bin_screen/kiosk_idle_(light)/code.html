@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kiosk Idle Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9a406",
+                        "background-light": "#FDFBF7",
+                        "background-dark": "#231c0f",
+                        "charcoal": "#181611",
+                        "earth-brown": "#8c7c5f",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom visual effect for the static "pulse" look since animations are disabled */
+        .solar-glow {
+            box-shadow: 0 0 40px 10px rgba(249, 164, 6, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen w-full overflow-hidden flex flex-col relative antialiased selection:bg-primary/30">
+<!-- Top Status Bar / Header -->
+<header class="w-full pt-12 pb-4 px-6 flex justify-between items-center z-10">
+<div class="flex items-center gap-2 opacity-60">
+<span class="material-symbols-outlined text-charcoal dark:text-white" style="font-size: 20px;">wifi</span>
+<span class="text-charcoal dark:text-white text-sm font-medium tracking-wide">ID: K-4022</span>
+</div>
+<div class="text-charcoal dark:text-white text-sm font-medium opacity-60 tracking-wide">
+            10:42 AM
+        </div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col items-center justify-center relative px-6 w-full max-w-md mx-auto z-10">
+<!-- Central Solar Earth Visual -->
+<div class="relative mb-12 flex items-center justify-center">
+<!-- Decorative Rings to simulate pulse/solar energy -->
+<div class="absolute w-[280px] h-[280px] rounded-full border border-primary/20 scale-110"></div>
+<div class="absolute w-[240px] h-[240px] rounded-full border border-primary/40 bg-primary/5"></div>
+<!-- Icon Container -->
+<div class="relative w-48 h-48 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center solar-glow border-4 border-primary/10">
+<div class="text-primary flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-size: 96px; font-variation-settings: 'FILL' 1, 'wght' 200;">
+                        public
+                    </span>
+<span class="material-symbols-outlined absolute text-charcoal dark:text-white opacity-80" style="font-size: 48px; margin-top: 48px; margin-left: 48px; font-variation-settings: 'FILL' 1, 'wght' 400;">
+                        recycling
+                    </span>
+</div>
+</div>
+</div>
+<!-- Primary Text -->
+<h1 class="text-charcoal dark:text-white text-5xl font-bold leading-[1.1] text-center mb-6 tracking-tight">
+            Recycle <br/>
+<span class="text-primary">E-Waste</span> Here
+        </h1>
+<!-- Subtext Instruction -->
+<div class="flex flex-col items-center gap-4">
+<p class="text-earth-brown dark:text-gray-300 text-lg font-normal text-center max-w-[280px] leading-relaxed">
+                Scan QR on your phone to begin
+            </p>
+<!-- QR Placeholder Graphic -->
+<div class="bg-white dark:bg-white/10 p-3 rounded-lg border border-earth-brown/20 mt-2 shadow-sm">
+<span class="material-symbols-outlined text-charcoal dark:text-white opacity-80" style="font-size: 64px;">qr_code_2</span>
+</div>
+</div>
+</main>
+<!-- Bottom Status Bar -->
+<footer class="w-full pb-8 pt-4 px-6 z-10">
+<div class="w-full bg-white dark:bg-white/5 border border-primary/20 backdrop-blur-md rounded-xl p-4 flex items-center justify-between shadow-lg shadow-primary/5">
+<div class="flex items-center gap-3">
+<div class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</div>
+<span class="text-charcoal dark:text-white text-base font-medium tracking-wide">Status: Ready</span>
+</div>
+<div class="flex items-center gap-4 text-earth-brown dark:text-gray-400">
+<div class="flex flex-col items-center justify-center">
+<span class="material-symbols-outlined" style="font-size: 24px;">battery_charging_full</span>
+<span class="text-[10px] uppercase font-bold tracking-wider mt-0.5">Solar</span>
+</div>
+</div>
+</div>
+</footer>
+<!-- Background Decoration -->
+<div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+<!-- Abstract top right shape -->
+<div class="absolute -top-[10%] -right-[10%] w-[50%] h-[40%] bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl opacity-60"></div>
+<!-- Abstract bottom left shape -->
+<div class="absolute -bottom-[10%] -left-[10%] w-[60%] h-[40%] bg-gradient-to-tr from-earth-brown/10 to-transparent rounded-full blur-3xl opacity-40"></div>
+<!-- Texture overlay for "paper" feel -->
+<div class="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/cardboard.png')] mix-blend-multiply dark:mix-blend-overlay"></div>
+</div>
+</body></html>

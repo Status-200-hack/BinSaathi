@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kiosk Idle Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9a406",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#181611", /* Adjusted slightly darker charcoal per prompt description */
+                        "surface-dark": "#231c0f",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased min-h-screen flex flex-col overflow-hidden selection:bg-primary selection:text-background-dark">
+<main class="flex-grow flex flex-col relative w-full h-full min-h-screen">
+<!-- Header / Top Section -->
+<header class="flex-none px-6 pt-12 pb-6 flex flex-col items-center justify-center text-center z-10">
+<div class="inline-flex items-center justify-center p-2 mb-6 rounded-full bg-surface-dark border border-white/10 shadow-lg">
+<span class="material-symbols-outlined text-primary text-2xl mr-2">recycling</span>
+<span class="text-white/80 text-sm font-medium tracking-wide uppercase">Eco-Station 04</span>
+</div>
+<h1 class="text-white text-5xl md:text-6xl font-bold leading-none tracking-tight mb-2">
+                Recycle<br/>
+<span class="text-primary">E-Waste</span> Here
+            </h1>
+</header>
+<!-- Center / Hero Section -->
+<section class="flex-grow flex flex-col items-center justify-center relative z-0">
+<!-- Decorative Glow Background -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/20 rounded-full blur-[100px] animate-pulse-slow pointer-events-none"></div>
+<!-- Logo / Visual Container -->
+<div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 flex items-center justify-center">
+<!-- Outer Ring -->
+<div class="absolute inset-0 border-2 border-primary/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+<div class="absolute inset-4 border border-white/5 rounded-full"></div>
+<!-- Central Image/Logo -->
+<div class="relative z-10 w-48 h-48 bg-surface-dark rounded-full flex items-center justify-center shadow-2xl border border-white/10 overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover opacity-80 mix-blend-overlay" data-alt="Abstract view of earth from space with glowing networks" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB3Xpq0ZW8fuP94RUVV1gg5amYbNKCEQz19HdX-QlswVKriENyR8qqjTpyF4EngYiIQNzB6wpQshN5p2SEm2kj7l7zeOCx88ZBjoDNxW1CZMlRE3QYrbFOxkJPaftMCBXdNUOwY_nPDZVZn_LSQiXUMlu7E3YDhd1_hMyTxF0ohCx8LAGndxkbNDnEHRKxy0oVi9CRwdPLFlXzPVUte2h1n36dH3ISem4X9HaWPQAtAqH4GlcRHh7HzqY7_BX39z9Y333pLfaykbEU');"></div>
+<div class="flex flex-col items-center z-20">
+<span class="material-symbols-outlined text-primary text-6xl mb-2">solar_power</span>
+<span class="text-white text-lg font-bold tracking-widest uppercase">Solar<br/>Earth</span>
+</div>
+</div>
+<!-- Orbiting Dot -->
+<div class="absolute w-full h-full animate-[spin_3s_linear_infinite]">
+<div class="w-3 h-3 bg-primary rounded-full absolute top-0 left-1/2 -translate-x-1/2 shadow-[0_0_15px_rgba(249,164,6,0.8)]"></div>
+</div>
+</div>
+<!-- Instructional Text -->
+<div class="text-center px-6 relative z-10">
+<p class="text-white text-xl md:text-2xl font-medium mb-6">Scan QR on your phone to begin</p>
+<!-- QR Code Placeholder -->
+<div class="bg-white p-4 rounded-xl mx-auto w-40 h-40 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+<div class="w-full h-full bg-neutral-900 flex items-center justify-center relative overflow-hidden" data-alt="QR Code for scanning">
+<!-- Simulated QR Pattern -->
+<div class="absolute inset-0 grid grid-cols-6 grid-rows-6 gap-0.5 p-1">
+<div class="bg-white col-span-2 row-span-2 rounded-sm"></div>
+<div class="bg-white col-span-2 row-span-2 col-start-5 rounded-sm"></div>
+<div class="bg-white col-span-2 row-span-2 row-start-5 rounded-sm"></div>
+<div class="bg-white col-span-1 row-span-1 col-start-3 row-start-2"></div>
+<div class="bg-white col-span-1 row-span-1 col-start-4 row-start-4"></div>
+<div class="bg-white col-span-1 row-span-1 col-start-2 row-start-4"></div>
+<div class="bg-white col-span-1 row-span-1 col-start-5 row-start-4"></div>
+<div class="bg-white col-span-2 row-span-1 col-start-3 row-start-3"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer / Status Bar -->
+<footer class="flex-none p-6 z-10">
+<div class="bg-surface-dark border border-white/5 rounded-xl p-4 flex items-center justify-between shadow-lg backdrop-blur-sm bg-opacity-80">
+<div class="flex flex-col">
+<span class="text-white/40 text-xs uppercase tracking-wider font-bold mb-1">System Status</span>
+<div class="flex items-center gap-2">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+<span class="text-primary font-bold text-lg tracking-wide">Ready</span>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-white/10 mx-2"></div>
+<div class="flex items-center gap-4 text-right">
+<div class="flex flex-col items-end">
+<span class="text-white text-sm font-medium">Touch to Start</span>
+<span class="text-white/40 text-xs">Alternative Method</span>
+</div>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary p-3 rounded-lg transition-colors duration-200">
+<span class="material-symbols-outlined text-2xl">touch_app</span>
+</button>
+</div>
+</div>
+<!-- Bottom Safety/Legal Text -->
+<div class="mt-4 flex justify-between items-center px-2">
+<p class="text-[#bbb09b] text-xs">ID: K-8821-NY</p>
+<div class="flex gap-2 text-[#bbb09b]">
+<span class="material-symbols-outlined text-sm">wifi</span>
+<span class="material-symbols-outlined text-sm">battery_charging_full</span>
+</div>
+</div>
+</footer>
+<!-- Decorative Corner Elements for Industrial Feel -->
+<div class="absolute top-0 left-0 p-4 opacity-20 pointer-events-none">
+<div class="w-32 h-32 border-l-2 border-t-2 border-white rounded-tl-3xl"></div>
+</div>
+<div class="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
+<div class="w-32 h-32 border-r-2 border-t-2 border-white rounded-tr-3xl"></div>
+</div>
+<div class="absolute bottom-0 left-0 p-4 opacity-20 pointer-events-none">
+<div class="w-32 h-32 border-l-2 border-b-2 border-white rounded-bl-3xl"></div>
+</div>
+<div class="absolute bottom-0 right-0 p-4 opacity-20 pointer-events-none">
+<div class="w-32 h-32 border-r-2 border-b-2 border-white rounded-br-3xl"></div>
+</div>
+</main>
+</body></html>

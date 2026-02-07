@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kiosk Error - Bin Full</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9a406",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#231c0f",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Background Pattern/Texture -->
+<div class="absolute inset-0 z-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#f9a406 1px, transparent 1px); background-size: 32px 32px;">
+</div>
+<!-- Status Bar Area (Mockup) -->
+<div class="absolute top-0 w-full flex justify-between items-center px-6 py-4 z-20 text-black dark:text-white/60 text-sm font-medium uppercase tracking-widest">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">wifi</span>
+<span>Online</span>
+</div>
+<div>
+<span>ID: K-402</span>
+</div>
+</div>
+<!-- Main Content Container -->
+<div class="relative z-10 w-full max-w-md px-6 flex flex-col items-center justify-center min-h-[80vh] gap-8">
+<!-- Large Warning Icon -->
+<div class="relative flex items-center justify-center">
+<!-- Glowing effect behind icon -->
+<div class="absolute w-40 h-40 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+<span class="material-symbols-outlined text-[120px] text-primary relative z-10">warning</span>
+</div>
+<!-- Text Content -->
+<div class="text-center space-y-4">
+<h1 class="text-black dark:text-white text-4xl md:text-5xl font-bold tracking-tight uppercase leading-tight">
+                Bin is Full
+            </h1>
+<p class="text-black/70 dark:text-white/70 text-lg md:text-xl font-normal leading-relaxed max-w-xs mx-auto">
+                This unit has reached maximum capacity. For your safety and to prevent overflow, please use the next available kiosk.
+            </p>
+</div>
+<!-- Additional Info Card (Optional context) -->
+<div class="w-full bg-white/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-4 flex items-center gap-4 backdrop-blur-sm">
+<div class="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-2xl">recycling</span>
+</div>
+<div class="flex-1">
+<h3 class="text-black dark:text-white font-bold text-sm">Capacity Status</h3>
+<div class="w-full bg-black/10 dark:bg-white/10 h-2 rounded-full mt-2 overflow-hidden">
+<div class="bg-red-500 h-full w-[100%] rounded-full"></div>
+</div>
+</div>
+<span class="text-red-500 font-bold text-sm">100%</span>
+</div>
+</div>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-0 w-full max-w-md p-6 z-20 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/90 dark:via-background-dark/90 to-transparent pb-10">
+<div class="flex flex-col gap-4">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all text-background-dark text-lg font-bold h-14 rounded-xl shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">map</span>
+                Find Nearby Bin
+            </button>
+<button class="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-black/60 dark:text-white/60 text-base font-medium h-12 rounded-xl border border-black/10 dark:border-white/10">
+                Close
+            </button>
+</div>
+</div>
+</body></html>
