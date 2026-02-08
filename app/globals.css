@@ -1,118 +1,99 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import 'leaflet/dist/leaflet.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background-light: #FFFDF5;
-    --background-dark: #231c0f;
-    --surface-light: #ffffff;
-    --surface-dark: #2d2417;
-    --text-light: #181611;
-    --text-dark: #ffffff;
-    --primary: #f9a406;
+    --background: 255 253 245; /* #FFFDF5 */
+    --foreground: 24 22 17; /* #181611 */
+    --card: 255 255 255;
+    --card-foreground: 24 22 17;
+    --popover: 255 255 255;
+    --popover-foreground: 24 22 17;
+    --primary: 249 164 6; /* #f9a406 */
+    --primary-foreground: 24 22 17;
+    --secondary: 245 245 244;
+    --secondary-foreground: 24 22 17;
+    --muted: 245 245 244;
+    --muted-foreground: 120 113 108;
+    --accent: 245 245 244;
+    --accent-foreground: 24 22 17;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 231 229 228;
+    --input: 231 229 228;
+    --ring: 249 164 6;
+    --radius: 0.5rem;
   }
 
-  * {
-    @apply border-stone-200 dark:border-stone-700;
-  }
-  
-  body {
-    @apply bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-display;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Safe area support for mobile */
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  /* Custom scrollbar */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Material Icons font weight fix */
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-  
-  .material-symbols-outlined.fill {
-    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  .dark {
+    --background: 35 28 15; /* #231c0f */
+    --foreground: 255 255 255;
+    --card: 45 36 23; /* #2d2417 */
+    --card-foreground: 255 255 255;
+    --popover: 45 36 23;
+    --popover-foreground: 255 255 255;
+    --primary: 249 164 6;
+    --primary-foreground: 24 22 17;
+    --secondary: 41 37 36;
+    --secondary-foreground: 255 255 255;
+    --muted: 41 37 36;
+    --muted-foreground: 168 162 158;
+    --accent: 41 37 36;
+    --accent-foreground: 255 255 255;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 41 37 36;
+    --input: 41 37 36;
+    --ring: 249 164 6;
   }
 }
 
-@layer components {
-  /* Glass morphism utilities */
-  .glass-card {
-    @apply bg-glass-light dark:bg-glass-dark backdrop-blur-md border border-white/20 dark:border-white/10;
+@layer base {
+  * {
+    border-color: rgb(var(--border));
   }
-  
-  .glass-panel {
-    @apply bg-surface-light/85 dark:bg-surface-dark/85 backdrop-blur-md border border-white/40 dark:border-white/10;
+  body {
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
   }
+}
 
-  /* Animation utilities */
-  .animate-fade-in-up {
-    animation: fadeInUp 0.5s ease-out;
-  }
-  
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+/* Material Symbols font settings */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
 
-  /* Scanner specific animations */
-  .scanner-frame {
-    @apply relative border border-white/40 rounded-3xl overflow-hidden;
-  }
-  
-  .scanner-corners {
-    @apply absolute w-8 h-8 border-white;
-  }
-  
-  .scanner-corners.top-left {
-    @apply top-2 left-2 border-t-4 border-l-4 rounded-tl-xl;
-  }
-  
-  .scanner-corners.top-right {
-    @apply top-2 right-2 border-t-4 border-r-4 rounded-tr-xl;
-  }
-  
-  .scanner-corners.bottom-left {
-    @apply bottom-2 left-2 border-b-4 border-l-4 rounded-bl-xl;
-  }
-  
-  .scanner-corners.bottom-right {
-    @apply bottom-2 right-2 border-b-4 border-r-4 rounded-br-xl;
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  /* Progress ring utilities */
-  .progress-ring {
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-  }
-  
-  .progress-ring-circle {
-    transition: stroke-dashoffset 0.35s;
-  }
+::-webkit-scrollbar-track {
+  background-color: rgb(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--primary), 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--primary), 0.5);
+}
+
+/* Leaflet map fixes */
+.leaflet-container {
+  background-color: rgb(var(--background));
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: rgb(var(--card));
+  color: rgb(var(--foreground));
+  border-radius: 0.5rem;
+}
+
+.leaflet-popup-tip {
+  background-color: rgb(var(--card));
 }

@@ -93,15 +93,71 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
     if (ctx) {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
       
-      // Get image data as base64
-      const imageData = canvas.toDataURL('image/jpeg', 0.9)
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       
-      // Simulate scanning delay
+      // Try to detect QR code
+      try {
+        const jsQR = require('jsqr')
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "attemptBoth",
+        })
+        
+        console.log('QR Detection result:', qrCode)
+        
+        if (qrCode && qrCode.data) {
+          // QR Code detected!
+          console.log('QR Code detected:', qrCode.data)
+          
+          // Check if it's a bin QR code URL
+          if (qrCode.data.includes('/bin/') && qrCode.data.includes('/connect')) {
+            console.log('Bin QR code detected!')
+            
+            // Extract bin ID from URL
+            const urlParts = qrCode.data.split('/bin/')[1]
+            const binId = urlParts.split('/connect')[0]
+            console.log('Extracted bin ID:', binId)
+            
+            // Stop camera
+            setIsScanning(false)
+            stopCamera()
+            
+            // Create session and notify parent
+            import('@/lib/auth/simple-auth').then(({ getCurrentUser }) => {
+              import('@/lib/services/session-service').then(({ createBinSession }) => {
+                const user = getCurrentUser()
+                if (user) {
+                  const session = createBinSession(binId, user.id, user.name, user.email, user.avatar)
+                  localStorage.setItem('current_bin_session', session.sessionId)
+                  
+                  // Store success info
+                  sessionStorage.setItem('qr_scan_success', JSON.stringify({ binId, timestamp: Date.now() }))
+                  
+                  // Close camera and let parent handle success
+                  onClose()
+                } else {
+                  alert('Please sign in first')
+                  window.location.href = '/sign-in'
+                }
+              })
+            })
+            return
+          } else {
+            console.log('QR code found but not a bin QR code:', qrCode.data)
+          }
+        } else {
+          console.log('No QR code detected in image')
+        }
+      } catch (error) {
+        console.error('QR detection error:', error)
+      }
+      
+      // No QR code detected - close camera
       setTimeout(() => {
         setIsScanning(false)
-        onCapture(imageData)
         stopCamera()
-      }, 1500)
+        onClose()
+      }, 1000)
     }
   }
 
@@ -171,8 +227,11 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
 
           {/* Scanning Animation */}
           {isScanning && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_15px_2px_rgba(249,164,6,0.8)] animate-scan" />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-white text-sm font-bold">Detecting QR Code...</p>
+              </div>
             </div>
           )}
         </div>
@@ -180,7 +239,7 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
         {/* Helper Text */}
         <div className="mt-8 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/20">
           <p className="text-white text-sm font-medium tracking-wide">
-            {isScanning ? 'Analyzing...' : 'Center device in frame'}
+            {isScanning ? 'Scanning...' : 'Point at QR code and capture'}
           </p>
         </div>
       </div>
@@ -197,27 +256,62 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
             <span className="material-symbols-outlined text-2xl">flip_camera_ios</span>
           </button>
 
-          {/* Capture Button */}
+          {/* Test Connect Button (replaces capture for testing) */}
           <button
-            onClick={capturePhoto}
+            onClick={() => {
+              setIsScanning(true)
+              
+              // Simulate QR detection and create session
+              import('@/lib/auth/simple-auth').then(({ getCurrentUser }) => {
+                import('@/lib/services/session-service').then(({ createBinSession }) => {
+                  const user = getCurrentUser()
+                  if (user) {
+                    const binId = 'BIN001'
+                    const session = createBinSession(binId, user.id, user.name, user.email, user.avatar)
+                    localStorage.setItem('current_bin_session', session.sessionId)
+                    
+                    console.log('Session created:', session)
+                    
+                    // Store success info
+                    sessionStorage.setItem('qr_scan_success', JSON.stringify({ binId, timestamp: Date.now() }))
+                    
+                    // Stop camera and close
+                    setTimeout(() => {
+                      setIsScanning(false)
+                      stopCamera()
+                      onClose()
+                    }, 500)
+                  } else {
+                    alert('Please sign in first')
+                    setIsScanning(false)
+                  }
+                })
+              })
+            }}
             disabled={isScanning || !stream}
             className="relative h-20 w-20 rounded-full flex items-center justify-center disabled:opacity-50 transition-all active:scale-95"
           >
-            <div className="absolute inset-0 rounded-full bg-white/30 backdrop-blur-md border-4 border-white" />
-            <div className={`absolute inset-2 rounded-full transition-all ${
-              isScanning ? 'bg-primary animate-pulse' : 'bg-white'
-            }`} />
+            <div className="absolute inset-0 rounded-full bg-primary/30 backdrop-blur-md border-4 border-primary" />
+            <div className={`absolute inset-2 rounded-full transition-all flex items-center justify-center ${
+              isScanning ? 'bg-primary animate-pulse' : 'bg-primary'
+            }`}>
+              <span className="material-symbols-outlined text-background-dark text-3xl">link</span>
+            </div>
           </button>
 
-          {/* Gallery/Upload */}
+          {/* Close Button */}
           <button
             onClick={onClose}
             disabled={isScanning}
             className="h-14 w-14 rounded-full flex items-center justify-center text-white bg-white/20 backdrop-blur-md border border-white/30 active:bg-white/30 transition-all disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-2xl">photo_library</span>
+            <span className="material-symbols-outlined text-2xl">close</span>
           </button>
         </div>
+        
+        <p className="text-white text-xs text-center mt-3 opacity-70">
+          Tap center button to connect to BIN001
+        </p>
       </div>
 
       {/* Error Message */}

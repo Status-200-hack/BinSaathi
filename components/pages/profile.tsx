@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { getCurrentUser, signOut } from '@/lib/auth/simple-auth'
 
 interface UserStats {
   co2Saved: number
@@ -60,18 +62,26 @@ const settingsMenu = [
 ]
 
 export function Profile() {
-  const [userName] = useState('Alex Johnson')
+  const router = useRouter()
+  const [userName, setUserName] = useState('Guest User')
+  const [userAvatar, setUserAvatar] = useState('https://ui-avatars.com/api/?name=Guest+User&background=f9a406&color=231c0f&size=200')
   const [userLevel] = useState('Expert Recycler')
-  const [userAvatar] = useState('https://lh3.googleusercontent.com/aida-public/AB6AXuALyIaoxTLb4A1YvBc3kuy4qgnxWydOT7OrWCTe09xEcjCGpSLQQyOTe8esBFEliqe1LX5eV1O3-6fQKbiJo6aNGPs2SsA4TNTgtIVGf7Gk-vO5-_ll3l0lqOb4BoRDy2qZ8QNXP-aHNKmTdd1RE9sm6YmKx5McEgdROoGU_Y4X7JfIpMmUwnbNeimaAJ7HJi5rU5PliuI1pZlio6uuNVYOknPKHBF0QoTw4Z-qQjxPDeYxdQh9NQ1P4QbpyeTLmrFbBFPGVWPi51U')
+
+  useEffect(() => {
+    const user = getCurrentUser()
+    if (user) {
+      setUserName(user.name)
+      setUserAvatar(user.avatar)
+    }
+  }, [])
 
   const handleSettingClick = (action: string) => {
     console.log('Setting clicked:', action)
-    // Handle navigation or action
   }
 
   const handleLogout = () => {
-    console.log('Logout clicked')
-    // Handle logout
+    signOut()
+    router.push('/sign-in')
   }
 
   return (

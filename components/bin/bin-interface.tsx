@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/ui/theme-provider'
+import { getActiveBinSession, generateQRData, type BinSession } from '@/lib/services/session-service'
+import QRCode from 'qrcode'
 
 interface BinInterfaceProps {
   binId: string
@@ -20,22 +22,71 @@ export function BinInterface({ binId }: BinInterfaceProps) {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [state, setState] = useState<SessionState>('idle')
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [activeSession, setActiveSession] = useState<BinSession | null>(null)
   const [result, setResult] = useState<DetectionResult | null>(null)
   const [countdown, setCountdown] = useState(5)
   const [scanProgress, setScanProgress] = useState(0)
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
 
-  // Simulate QR code scanning
+  // Generate QR code on mount
   useEffect(() => {
-    const handleQRScan = (event: CustomEvent) => {
-      const { sessionId } = event.detail
-      setSessionId(sessionId)
-      setState('connected')
-    }
+    const qrData = generateQRData(binId)
+    QRCode.toDataURL(qrData, {
+      width: 200,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    }).then(url => {
+      setQrCodeUrl(url)
+    }).catch(err => {
+      console.error('QR code generation error:', err)
+    })
+  }, [binId])
 
-    window.addEventListener('qr-scanned' as any, handleQRScan)
-    return () => window.removeEventListener('qr-scanned' as any, handleQRScan)
-  }, [])
+  // Poll for active session
+  useEffect(() => {
+    if (state === 'idle') {
+      const interval = setInterval(() => {
+        const session = getActiveBinSession(binId)
+        if (session) {
+          setActiveSession(session)
+          setState('connected')
+        }
+      }, 1000) // Check every second
+
+      return () => clearInterval(interval)
+    }
+  }, [binId, state])
+
+  // Keyboard shortcut for testing (L key on idle screen)
+  useEffect(() => {
+    if (state === 'idle') {
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.key === 'l' || e.key === 'L') {
+          console.log('L key pressed - creating test session')
+          
+          // Create a test session
+          import('@/lib/services/session-service').then(({ createBinSession }) => {
+            const testSession = createBinSession(
+              binId,
+              'test-user-123',
+              'Test User',
+              'test@example.com',
+              'https://ui-avatars.com/api/?name=Test+User&background=f9a406&color=231c0f&size=200'
+            )
+            localStorage.setItem('current_bin_session', testSession.sessionId)
+            setActiveSession(testSession)
+            setState('connected')
+          })
+        }
+      }
+
+      window.addEventListener('keydown', handleKeyPress)
+      return () => window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [state, binId])
 
   // Handle item detection with progress
   useEffect(() => {
@@ -75,7 +126,7 @@ export function BinInterface({ binId }: BinInterfaceProps) {
         return () => clearTimeout(timer)
       } else {
         setState('idle')
-        setSessionId(null)
+        setActiveSession(null)
         setResult(null)
         setCountdown(5)
       }
@@ -96,7 +147,7 @@ export function BinInterface({ binId }: BinInterfaceProps) {
 
   const handleCancel = () => {
     setState('idle')
-    setSessionId(null)
+    setActiveSession(null)
     setResult(null)
   }
 
@@ -159,21 +210,15 @@ export function BinInterface({ binId }: BinInterfaceProps) {
           <div className="text-center px-6 relative z-10">
             <p className="text-foreground text-xl md:text-2xl font-medium mb-6">Scan QR on your phone to begin</p>
 
-            {/* QR Code Placeholder */}
+            {/* QR Code */}
             <div className="bg-white p-4 rounded-xl mx-auto w-40 h-40 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-              <div className="w-full h-full bg-neutral-900 flex items-center justify-center relative overflow-hidden">
-                {/* Simulated QR Pattern */}
-                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 gap-0.5 p-1">
-                  <div className="bg-white col-span-2 row-span-2 rounded-sm"></div>
-                  <div className="bg-white col-span-2 row-span-2 col-start-5 rounded-sm"></div>
-                  <div className="bg-white col-span-2 row-span-2 row-start-5 rounded-sm"></div>
-                  <div className="bg-white col-span-1 row-span-1 col-start-3 row-start-2"></div>
-                  <div className="bg-white col-span-1 row-span-1 col-start-4 row-start-4"></div>
-                  <div className="bg-white col-span-1 row-span-1 col-start-2 row-start-4"></div>
-                  <div className="bg-white col-span-1 row-span-1 col-start-5 row-start-4"></div>
-                  <div className="bg-white col-span-2 row-span-1 col-start-3 row-start-3"></div>
+              {qrCodeUrl ? (
+                <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
+              ) : (
+                <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                  <span className="text-white text-xs">Loading...</span>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
@@ -232,7 +277,7 @@ export function BinInterface({ binId }: BinInterfaceProps) {
   }
 
   // Connected State - Based on Stitch kiosk_connected design
-  if (state === 'connected') {
+  if (state === 'connected' && activeSession) {
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark font-display flex flex-col justify-between overflow-hidden">
         {/* Header */}
@@ -240,15 +285,19 @@ export function BinInterface({ binId }: BinInterfaceProps) {
           <div className="relative mb-8">
             {/* Pulsing effect behind icon */}
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
-            <div className="relative bg-surface-dark border border-primary/30 rounded-full p-8 flex items-center justify-center shadow-[0_0_15px_rgba(249,164,6,0.3)]">
-              <span className="material-symbols-outlined text-primary text-[64px]">link</span>
+            <div className="relative bg-surface-dark border border-primary/30 rounded-full p-2 flex items-center justify-center shadow-[0_0_15px_rgba(249,164,6,0.3)]">
+              <img 
+                src={activeSession.userAvatar} 
+                alt={activeSession.userName}
+                className="w-24 h-24 rounded-full"
+              />
             </div>
             {/* Checkmark badge */}
             <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-2 border-4 border-background-dark flex items-center justify-center">
               <span className="material-symbols-outlined text-white text-[20px] font-bold">check</span>
             </div>
           </div>
-          <h1 className="text-foreground text-3xl font-bold tracking-tight text-center mb-2">Connected to your phone</h1>
+          <h1 className="text-foreground text-3xl font-bold tracking-tight text-center mb-2">Welcome, {activeSession.userName}!</h1>
           <p className="text-foreground/60 text-lg font-medium text-center">Device linked successfully</p>
         </div>
 
@@ -506,73 +555,187 @@ export function BinInterface({ binId }: BinInterfaceProps) {
     )
   }
 
-  // Success State - Based on Stitch kiosk_success design
+  // Success State - With Receipt and Download
   if (state === 'success') {
+    const handleDownloadReceipt = () => {
+      // Generate receipt data
+      const receiptData = {
+        binId,
+        userName: activeSession?.userName || 'User',
+        item: result?.item || 'E-Waste Item',
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString(),
+        points: 50,
+        co2Saved: 0.8,
+        value: 15
+      }
+
+      // Create receipt HTML
+      const receiptHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Recycling Receipt</title>
+          <style>
+            body { font-family: 'Space Grotesk', Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { font-size: 24px; font-weight: bold; color: #f9a406; }
+            .title { font-size: 32px; font-weight: bold; margin: 20px 0; }
+            .success { color: #10b981; }
+            .info { margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 10px; }
+            .stat { display: flex; justify-content: space-between; margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #ddd; }
+            .stat:last-child { border-bottom: none; }
+            .label { font-weight: 600; }
+            .value { color: #f9a406; font-weight: bold; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">♻️ SOLAR EARTH</div>
+            <div class="title">Recycling <span class="success">Receipt</span></div>
+          </div>
+          
+          <div class="info">
+            <div class="stat"><span class="label">User:</span><span>${receiptData.userName}</span></div>
+            <div class="stat"><span class="label">Item:</span><span>${receiptData.item}</span></div>
+            <div class="stat"><span class="label">Bin ID:</span><span>${receiptData.binId}</span></div>
+            <div class="stat"><span class="label">Date:</span><span>${receiptData.date}</span></div>
+            <div class="stat"><span class="label">Time:</span><span>${receiptData.time}</span></div>
+          </div>
+
+          <div class="info">
+            <h3 style="margin-top: 0;">Environmental Impact</h3>
+            <div class="stat"><span class="label">Points Earned:</span><span class="value">+${receiptData.points}</span></div>
+            <div class="stat"><span class="label">CO₂ Saved:</span><span class="value">${receiptData.co2Saved}kg</span></div>
+            <div class="stat"><span class="label">Recycling Value:</span><span class="value">$${receiptData.value}</span></div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for recycling with Solar Earth!</p>
+            <p>Together we're making a difference for our planet.</p>
+          </div>
+        </body>
+        </html>
+      `
+
+      // Create blob and download
+      const blob = new Blob([receiptHTML], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `receipt-${binId}-${Date.now()}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+
     return (
-      <div className="min-h-screen bg-background-light dark:bg-background-dark font-display h-screen w-full flex flex-col overflow-hidden select-none">
-        <div className="relative flex flex-col h-full w-full max-w-md mx-auto bg-background-light dark:bg-surface-dark shadow-2xl overflow-hidden">
-          {/* Abstract Background Pattern */}
+      <div className="min-h-screen bg-background-light dark:bg-background-dark font-display h-screen w-full flex flex-col overflow-hidden">
+        <div className="relative flex flex-col h-full w-full max-w-2xl mx-auto bg-background-light dark:bg-surface-dark shadow-2xl overflow-y-auto">
+          {/* Background Pattern */}
           <div 
-            className="absolute inset-0 z-0 opacity-20 pointer-events-none" 
+            className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
             style={{ 
               backgroundImage: 'radial-gradient(rgba(249, 164, 6, 0.1) 1px, transparent 1px)', 
               backgroundSize: '40px 40px' 
             }}
           ></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3"></div>
 
-          {/* Header / Top Bar */}
-          <div className="relative z-10 w-full h-16"></div>
-
-          {/* Center Content Area */}
-          <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8">
-            {/* Success Icon Animation Container */}
-            <div className="relative group">
-              {/* Glowing rings behind icon */}
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl scale-150 animate-pulse"></div>
-              {/* Main Icon Circle */}
-              <div className="relative flex items-center justify-center w-32 h-32 rounded-full border-4 border-primary bg-surface-dark shadow-2xl shadow-primary/30">
-                <span className="material-symbols-outlined text-primary text-[64px] font-bold">check</span>
-              </div>
+          {/* Header */}
+          <div className="relative z-10 p-8 text-center border-b border-stone-200 dark:border-stone-700">
+            <div className="inline-flex items-center justify-center p-3 mb-4 rounded-full bg-green-500/10 border border-green-500/20">
+              <span className="material-symbols-outlined text-green-500 text-5xl fill-current">check_circle</span>
             </div>
-
-            {/* Primary Message */}
-            <div className="space-y-4 max-w-xs mx-auto">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
-                Item recycled <br />
-                <span className="text-primary">successfully</span>
-              </h1>
-              {/* Secondary Feedback */}
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                Impact stats & rewards have been sent to your phone
-              </p>
-            </div>
-
-            {/* Abstract Visual / Divider */}
-            <div className="w-16 h-1 rounded-full bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              Recycling <span className="text-green-500">Successful!</span>
+            </h1>
+            <p className="text-stone-600 dark:text-stone-400">
+              {activeSession?.userName || 'User'} • Bin {binId}
+            </p>
           </div>
 
-          {/* Bottom Section: Countdown & Footer */}
-          <div className="relative z-10 w-full p-6 pb-10 bg-gradient-to-t from-background-light dark:from-background-dark to-transparent">
-            <div className="flex flex-col gap-4">
-              {/* Countdown Text */}
-              <div className="flex items-center justify-between px-1">
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-widest">System Reset</span>
-                <span className="text-base font-bold text-primary tabular-nums">{countdown}s</span>
+          {/* Receipt Content */}
+          <div className="relative z-10 flex-1 p-8 space-y-6">
+            {/* Item Info */}
+            <div className="bg-surface-light dark:bg-surface-dark border border-stone-200 dark:border-stone-700 rounded-xl p-6">
+              <h3 className="text-sm font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-4">Item Details</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground font-medium">Item Type:</span>
+                  <span className="text-primary font-bold text-lg">{result?.item || 'Phone'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground font-medium">Confidence:</span>
+                  <span className="text-green-500 font-bold">{result?.confidence || 92}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground font-medium">Date & Time:</span>
+                  <span className="text-foreground">{new Date().toLocaleString()}</span>
+                </div>
               </div>
-              {/* Progress Bar */}
-              <div className="w-full h-2 bg-gray-200 dark:bg-surface-dark rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all duration-1000 ease-linear" 
-                  style={{ width: `${(countdown / 5) * 100}%` }}
-                ></div>
-              </div>
-              {/* Footer Info */}
-              <p className="text-xs text-center text-muted-foreground mt-2 font-mono opacity-60">
-                ID: K-{binId} // SOLAR EARTH v2.4
-              </p>
             </div>
+
+            {/* Rewards */}
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-6">
+              <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">Rewards Earned</h3>
+              <div className="flex items-center justify-center mb-4">
+                <div className="text-center">
+                  <div className="text-6xl font-bold text-primary">+50</div>
+                  <div className="text-sm text-stone-600 dark:text-stone-400 uppercase tracking-wider">Points</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Environmental Impact */}
+            <div className="bg-surface-light dark:bg-surface-dark border border-stone-200 dark:border-stone-700 rounded-xl p-6">
+              <h3 className="text-sm font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-4">Environmental Impact</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-background-light dark:bg-background-dark rounded-lg">
+                  <span className="material-symbols-outlined text-stone-600 dark:text-stone-400 text-3xl mb-2">cloud_off</span>
+                  <div className="text-2xl font-bold text-foreground">0.8kg</div>
+                  <div className="text-xs text-stone-600 dark:text-stone-400">CO₂ Saved</div>
+                </div>
+                <div className="text-center p-4 bg-background-light dark:bg-background-dark rounded-lg">
+                  <span className="material-symbols-outlined text-primary text-3xl mb-2">bolt</span>
+                  <div className="text-2xl font-bold text-foreground">$15</div>
+                  <div className="text-xs text-stone-600 dark:text-stone-400">Value</div>
+                </div>
+                <div className="text-center p-4 bg-background-light dark:bg-background-dark rounded-lg">
+                  <span className="material-symbols-outlined text-green-500 text-3xl mb-2">recycling</span>
+                  <div className="text-2xl font-bold text-foreground">3</div>
+                  <div className="text-xs text-stone-600 dark:text-stone-400">Materials</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Download Button */}
+            <button
+              onClick={handleDownloadReceipt}
+              className="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold rounded-xl h-14 transition-colors flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined">download</span>
+              Download Receipt
+            </button>
+          </div>
+
+          {/* Footer with Countdown */}
+          <div className="relative z-10 p-6 border-t border-stone-200 dark:border-stone-700 bg-surface-light dark:bg-surface-dark">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-stone-600 dark:text-stone-400 uppercase tracking-wider">Returning to idle</span>
+              <span className="text-lg font-bold text-primary tabular-nums">{countdown}s</span>
+            </div>
+            <div className="w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary rounded-full transition-all duration-1000 ease-linear" 
+                style={{ width: `${(countdown / 5) * 100}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-center text-stone-500 dark:text-stone-400 mt-3">
+              ID: K-{binId} • SOLAR EARTH v2.4
+            </p>
           </div>
         </div>
       </div>

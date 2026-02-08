@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DetectionResult } from '@/lib/services/detection-service'
 import { useRouter } from 'next/navigation'
+import { completeSession, type BinSession } from '@/lib/services/session-service'
 
 const impactStats = [
   {
@@ -36,6 +37,7 @@ const impactStats = [
 export function SuccessScreen() {
   const router = useRouter()
   const [result, setResult] = useState<DetectionResult | null>(null)
+  const [binSession, setBinSession] = useState<BinSession | null>(null)
 
   useEffect(() => {
     // Get result from sessionStorage
@@ -48,15 +50,34 @@ export function SuccessScreen() {
           console.error('Failed to parse detection result:', error)
         }
       }
+
+      // Get bin session
+      const storedSession = sessionStorage.getItem('activeBinSession')
+      if (storedSession) {
+        try {
+          const session = JSON.parse(storedSession)
+          setBinSession(session)
+          
+          // Complete the session
+          completeSession(session.sessionId)
+          
+          // Clear current bin session
+          localStorage.removeItem('current_bin_session')
+        } catch (error) {
+          console.error('Failed to parse bin session:', error)
+        }
+      }
     }
   }, [])
 
   const handleRecycleAnother = () => {
-    // Clear stored result and go back to scanner
+    // Clear stored result
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('detectionResult')
+      sessionStorage.removeItem('activeBinSession')
     }
-    router.push('/scanner')
+    // Go back to home to scan another bin QR code
+    router.push('/')
   }
 
   const handleViewReceipt = () => {
@@ -106,6 +127,15 @@ export function SuccessScreen() {
           </div>
 
           <h2 className="text-2xl font-bold mb-2">Recycle Successful!</h2>
+          
+          {binSession && (
+            <div className="mb-4 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
+              <p className="text-sm text-primary font-medium">
+                <span className="material-symbols-outlined text-sm align-middle mr-1">location_on</span>
+                Bin {binSession.binId}
+              </p>
+            </div>
+          )}
           
           <div className="flex flex-col items-center mb-10">
             <h1 className="text-6xl font-bold text-primary tracking-tighter drop-shadow-sm">

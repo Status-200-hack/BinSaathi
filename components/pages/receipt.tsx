@@ -41,13 +41,12 @@ export function Receipt() {
 
       // Capture the receipt as canvas with higher quality
       const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
         backgroundColor: document.documentElement.classList.contains('dark') ? '#231c0f' : '#FFFDF5',
         logging: false,
         useCORS: true,
         windowWidth: receiptRef.current.scrollWidth,
         windowHeight: receiptRef.current.scrollHeight
-      })
+      } as any)
 
       // Convert to PDF
       const imgData = canvas.toDataURL('image/png')

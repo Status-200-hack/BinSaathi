@@ -218,9 +218,6 @@ export function BinFinder() {
               <span className="material-symbols-outlined">tune</span>
             </button>
           </div>
-          <button className="h-12 w-12 rounded-full bg-white/95 dark:bg-stone-800/95 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-lg flex items-center justify-center hover:bg-white dark:hover:bg-stone-700 transition-colors">
-            <span className="material-symbols-outlined text-stone-600 dark:text-stone-400">account_circle</span>
-          </button>
         </div>
 
         {/* Filter Chips */}

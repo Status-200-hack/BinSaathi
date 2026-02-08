@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/ui/theme-provider'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
+import { AuthGuard } from '@/components/auth/auth-guard'
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'],
@@ -46,7 +47,6 @@ export default function RootLayout({
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="dns-prefetch" href="https://firebaseapp.com" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="EcoRecycle" />
@@ -57,8 +57,10 @@ export default function RootLayout({
             defaultTheme="system"
             storageKey="ewaste-theme"
           >
-            {children}
-            <InstallPrompt />
+            <AuthGuard>
+              {children}
+              <InstallPrompt />
+            </AuthGuard>
           </ThemeProvider>
         </ErrorBoundary>
       </body>

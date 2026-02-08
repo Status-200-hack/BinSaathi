@@ -64,7 +64,7 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
   const [scanningPhase, setScanningPhase] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [showCamera, setShowCamera] = useState(false)
+  const [showCamera, setShowCamera] = useState(true) // Start with camera open
 
   const detectionService = DetectionService.getInstance()
 
@@ -91,8 +91,59 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
         setInput(prev => ({ ...prev, image: file }))
         setImagePreview(imageData)
         setShowCamera(false)
+        
+        // Automatically start detection after capture
+        setTimeout(() => {
+          handleStartDetection(file)
+        }, 100)
       })
   }, [])
+
+  const handleStartDetection = async (imageFile?: File) => {
+    const fileToUse = imageFile || input.image
+    if (!fileToUse) return
+
+    setIsProcessing(true)
+    setCurrentStep('scanning')
+    setScanningPhase(0)
+
+    // Animate through scanning phases
+    for (let i = 0; i < SCANNING_PHASES.length; i++) {
+      setScanningPhase(i)
+      await new Promise(resolve => setTimeout(resolve, SCANNING_PHASES[i].duration))
+    }
+
+    try {
+      const inputData = {
+        ...input,
+        image: fileToUse
+      }
+      
+      const detectionResult = await detectionService.processDetection(
+        inputData,
+        'user-123', // TODO: Get from auth
+        `session-${Date.now()}`
+      )
+
+      setResult(detectionResult)
+
+      // Get alternatives for medium confidence results
+      if (detectionResult.confidence >= 60 && detectionResult.confidence < 85) {
+        const alts = await detectionService.getAlternativeResults(inputData)
+        setAlternatives(alts)
+        setCurrentStep('alternatives')
+      } else if (detectionResult.confidence < 60) {
+        setCurrentStep('confirmation')
+      } else {
+        setCurrentStep('result')
+      }
+    } catch (error) {
+      console.error('Detection failed:', error)
+      // Handle error state
+    } finally {
+      setIsProcessing(false)
+    }
+  }
 
   const handleWeightChange = useCallback((value: number) => {
     setInput(prev => ({ ...prev, weight: value }))
@@ -108,41 +159,7 @@ export function DetectionFlow({ onComplete, onCancel }: DetectionFlowProps) {
   }, [])
 
   const startDetection = async () => {
-    setIsProcessing(true)
-    setCurrentStep('scanning')
-    setScanningPhase(0)
-
-    // Animate through scanning phases
-    for (let i = 0; i < SCANNING_PHASES.length; i++) {
-      setScanningPhase(i)
-      await new Promise(resolve => setTimeout(resolve, SCANNING_PHASES[i].duration))
-    }
-
-    try {
-      const detectionResult = await detectionService.processDetection(
-        input,
-        'user-123', // TODO: Get from auth
-        `session-${Date.now()}`
-      )
-
-      setResult(detectionResult)
-
-      // Get alternatives for medium confidence results
-      if (detectionResult.confidence >= 60 && detectionResult.confidence < 85) {
-        const alts = await detectionService.getAlternativeResults(input)
-        setAlternatives(alts)
-        setCurrentStep('alternatives')
-      } else if (detectionResult.confidence < 60) {
-        setCurrentStep('confirmation')
-      } else {
-        setCurrentStep('result')
-      }
-    } catch (error) {
-      console.error('Detection failed:', error)
-      // Handle error state
-    } finally {
-      setIsProcessing(false)
-    }
+    handleStartDetection()
   }
 
   const confirmResult = async (confirmed: boolean, correctedItem?: string) => {

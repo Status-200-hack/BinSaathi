@@ -1,6 +1,4 @@
-// Firestore Reward System Schema
-
-import { Timestamp } from 'firebase/firestore'
+// Reward System Schema
 
 // User Profile & Stats
 export interface UserProfile {
@@ -69,9 +67,9 @@ export interface UserProfile {
   }
   
   // Metadata
-  createdAt: Timestamp
-  updatedAt: Timestamp
-  lastActiveAt: Timestamp
+  createdAt: string
+  updatedAt: string
+  lastActiveAt: string
 }
 
 // Individual Recycling Transaction
@@ -142,7 +140,7 @@ export interface RecyclingTransaction {
   }
   
   // Metadata
-  createdAt: Timestamp
+  createdAt: string
   celebrationViewed: boolean
   shareCount: number
 }
@@ -164,12 +162,12 @@ export interface AchievementProgress {
   }
   
   // Completion
-  completedAt?: Timestamp
+  completedAt?: string
   notificationSent: boolean
   
   // Metadata
-  createdAt: Timestamp
-  updatedAt: Timestamp
+  createdAt: string
+  updatedAt: string
 }
 
 // Daily/Weekly Challenges
@@ -198,8 +196,8 @@ export interface Challenge {
   }
   
   // Timing
-  startDate: Timestamp
-  endDate: Timestamp
+  startDate: string
+  endDate: string
   
   // Participation
   participants: number
@@ -222,12 +220,12 @@ export interface UserChallengeProgress {
   completed: boolean
   
   // Completion
-  completedAt?: Timestamp
+  completedAt?: string
   rewardsClaimed: boolean
   
   // Metadata
-  startedAt: Timestamp
-  updatedAt: Timestamp
+  startedAt: string
+  updatedAt: string
 }
 
 // Leaderboard Entry
@@ -248,11 +246,11 @@ export interface LeaderboardEntry {
   
   // Time period
   period: 'daily' | 'weekly' | 'monthly' | 'allTime'
-  periodStart: Timestamp
-  periodEnd: Timestamp
+  periodStart: string
+  periodEnd: string
   
   // Metadata
-  updatedAt: Timestamp
+  updatedAt: string
 }
 
 // Reward Redemption
@@ -282,9 +280,9 @@ export interface RewardRedemption {
   }
   
   // Metadata
-  redeemedAt: Timestamp
-  expiresAt?: Timestamp
-  updatedAt: Timestamp
+  redeemedAt: string
+  expiresAt?: string
+  updatedAt: string
 }
 
 // Social Features
@@ -311,7 +309,7 @@ export interface SocialActivity {
   visibility: 'public' | 'friends' | 'private'
   
   // Metadata
-  createdAt: Timestamp
+  createdAt: string
 }
 
 // Analytics & Insights
@@ -362,11 +360,11 @@ export interface UserInsights {
   }
   
   // Metadata
-  generatedAt: Timestamp
+  generatedAt: string
 }
 
-// Collection Structure for Firestore
-export const FIRESTORE_COLLECTIONS = {
+// Collection Structure
+export const COLLECTIONS = {
   // User data
   users: 'users', // UserProfile documents
   
@@ -395,25 +393,3 @@ export const FIRESTORE_COLLECTIONS = {
   daily_stats: 'daily_stats', // Aggregated daily statistics
   monthly_stats: 'monthly_stats' // Aggregated monthly statistics
 } as const
-
-// Firestore Indexes Required
-export const REQUIRED_INDEXES = [
-  // User queries
-  { collection: 'users', fields: ['level.current', 'stats.totalPoints'] },
-  { collection: 'users', fields: ['stats.currentStreak', 'lastActiveAt'] },
-  
-  // Transaction queries
-  { collection: 'recycling_transactions', fields: ['userId', 'createdAt'] },
-  { collection: 'recycling_transactions', fields: ['item.type', 'createdAt'] },
-  
-  // Achievement queries
-  { collection: 'user_achievements', fields: ['userId', 'completed', 'updatedAt'] },
-  
-  // Leaderboard queries
-  { collection: 'leaderboards', fields: ['period', 'totalPoints', 'rank'] },
-  { collection: 'leaderboards', fields: ['period', 'totalCO2SavedKg', 'rank'] },
-  
-  // Challenge queries
-  { collection: 'challenges', fields: ['active', 'type', 'startDate'] },
-  { collection: 'user_challenges', fields: ['userId', 'completed', 'updatedAt'] }
-] as const
